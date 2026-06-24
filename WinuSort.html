@@ -1,0 +1,283 @@
+<!DOCTYPE HTML>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WinuFind - サイバー文字探しゲーム</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=M+PLUS+1p:wght@900&display=swap" rel="stylesheet">
+    
+    <style>
+        /* 毎回変わるネオンカラーの初期値 */
+        :root {
+            --neon-color: #00f3ff;
+        }
+
+        body {
+            margin: 0;
+            background-color: #05050a;
+            color: #ffffff;
+            font-family: 'M PLUS 1p', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        /* ゲーム全体の枠 */
+        .game-container {
+            text-align: center;
+            background: rgba(255, 255, 255, 0.02);
+            padding: 20px;
+            border-radius: 20px;
+            border: 2px solid var(--neon-color);
+            box-shadow: 0 0 20px var(--neon-color), inset 0 0 10px var(--neon-color);
+            max-width: 450px;
+            width: 90%;
+            transition: all 0.3s ease;
+        }
+
+        /* 100分の1秒タイマー */
+        .timer-box {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 42px;
+            color: var(--neon-color);
+            text-shadow: 0 0 10px var(--neon-color);
+            margin: 10px 0;
+        }
+
+        .score-box {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 20px;
+            color: #aaa;
+            margin-bottom: 10px;
+        }
+
+        /* 文字が大量に並ぶグリッド（6マス × 6マス = 36個） */
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 8px;
+            margin: 20px 0;
+            background: rgba(0, 0, 0, 0.4);
+            padding: 10px;
+            border-radius: 10px;
+        }
+
+        /* 文字ボタン（サイバー風デザイン） */
+        .char-btn {
+            font-family: 'M PLUS 1p', sans-serif;
+            font-size: 32px; /* 字体がハッキリ大きく見えるように */
+            font-weight: 900;
+            background: #111;
+            color: #ffffff;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            aspect-ratio: 1; /* 正方形にする */
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.1s;
+        }
+
+        /* マウスを乗せたとき */
+        .char-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: var(--neon-color);
+            box-shadow: 0 0 8px var(--neon-color);
+        }
+
+        /* お手つき（間違えたボタン）の演出 */
+        .char-btn.wrong {
+            background: #ff0055 !important;
+            border-color: #ff0055 !important;
+            box-shadow: 0 0 15px #ff0055 !important;
+        }
+
+        /* スタート・ゲームオーバー画面 */
+        .overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(5, 5, 10, 0.95);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+        }
+
+        .start-btn {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 24px;
+            padding: 15px 40px;
+            background: transparent;
+            color: var(--neon-color);
+            border: 2px solid var(--neon-color);
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            box-shadow: 0 0 15px var(--neon-color);
+            transition: all 0.2s;
+            margin-top: 20px;
+        }
+
+        .start-btn:hover {
+            background: var(--neon-color);
+            color: #000;
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+<body>
+
+    <div id="start-screen" class="overlay">
+        <h1 style="font-family: 'Orbitron', sans-serif; letter-spacing: 4px; font-size: 45px; color: var(--neon-color); text-shadow: 0 0 10px var(--neon-color); margin: 0;">WinuFind</h1>
+        <p style="color: #aaa; margin-top: 10px;">大量の文字から【1つだけ違う文字】を爆速で見つけ出せ！</p>
+        <button class="start-btn" onclick="startGame()">SYSTEM START</button>
+    </div>
+
+    <div class="game-container">
+        <div class="score-box">STAGE: <span id="stage-display" style="color:white;">1</span> &nbsp;|&nbsp; SCORE: <span id="score-display" style="color:white;">0</span></div>
+        
+        <div id="timer" class="timer-box">10.00</div>
+
+        <div id="grid-area" class="grid-container"></div>
+        
+        <p style="color: #666; font-size: 14px; margin: 0;">※お手つきをすると残り時間がガッツリ減るぞ！</p>
+    </div>
+
+    <script>
+        // 💡 毎回変わる「普通の文字」と「違う文字」のペアリスト（サイバー感あるものや漢字）
+        const charPairs = [
+            { normal: "木", target: "本" },
+            { normal: "大", target: "太" },
+            { normal: "白", target: "百" },
+            { normal: "目", target: "自" },
+            { normal: "日", target: "曰" },
+            { normal: "壁", target: "璧" },
+            { normal: "間", target: "闇" },
+            { normal: "鳥", target: "烏" },
+            { normal: "O", target: "0" }, // アルファベットのオーと数字のゼロ
+            { normal: "1", target: "l" }, // 数字のイチと小文字のエル
+            { normal: "シ", target: "ツ" },
+            { normal: "ろ", target: "る" }
+        ];
+
+        // 毎回変わるネオンカラー
+        const neonColors = ['#00f3ff', '#00ff66', '#ff0055', '#ffcc00', '#ff00ff', '#ff3300'];
+
+        let stage = 1;
+        let score = 0;
+        let timeLeft = 10.00;
+        let timerInterval = null;
+        let isClickable = true;
+
+        // ゲーム開始
+        function startGame() {
+            stage = 1;
+            score = 0;
+            document.getElementById('start-screen').style.display = 'none';
+            document.getElementById('stage-display').innerText = stage;
+            document.getElementById('score-display').innerText = score;
+            nextStage();
+        }
+
+        // 次のステージ（問題）を生成
+        function nextStage() {
+            isClickable = true;
+            
+            // 💡 1回一回違う部分が変わる演出①：画面のネオンカラーをランダム変更！
+            const randomColor = neonColors[Math.floor(Math.random() * neonColors.length)];
+            document.documentElement.style.setProperty('--neon-color', randomColor);
+
+            // 💡 1回一回違う部分が変わる演出②：文字の組み合わせをランダム選択！
+            const currentPair = charPairs[Math.floor(Math.random() * charPairs.length)];
+            
+            // 6x6 = 36マスのうち、1箇所だけランダムな「違う文字の場所」を決める！
+            const totalCells = 36;
+            const targetIndex = Math.floor(Math.random() * totalCells);
+
+            const gridArea = document.getElementById('grid-area');
+            gridArea.innerHTML = ""; // 前の画面をクリア
+
+            // ボタンを36個敷き詰める
+            for (let i = 0; i < totalCells; i++) {
+                const btn = document.createElement('button');
+                btn.className = 'char-btn';
+                
+                // 💡 違う文字を毎回違う場所にセットする核心部分！
+                if (i === targetIndex) {
+                    btn.innerText = currentPair.target; // 1つだけ違う文字
+                    btn.onclick = () => touchTarget();  // 正解の処理
+                } else {
+                    btn.innerText = currentPair.normal; // いつもの文字
+                    btn.onclick = (e) => touchWrong(e.target); // 不正解の処理
+                }
+                
+                gridArea.appendChild(btn);
+            }
+
+            // 💡 制限時間をセット（ステージが進むほど初期時間が短くなり難しくなる！）
+            timeLeft = Math.max(3.00, 10.00 - (stage * 0.3)); 
+            document.getElementById('timer').innerText = timeLeft.toFixed(2);
+            
+            clearInterval(timerInterval);
+            // 0.01秒（10ミリ秒）ごとに超高速カウントダウン！
+            timerInterval = setInterval(() => {
+                timeLeft -= 0.01;
+                if (timeLeft <= 0) {
+                    timeLeft = 0;
+                    document.getElementById('timer').innerText = "0.00";
+                    gameOver();
+                } else {
+                    document.getElementById('timer').innerText = timeLeft.toFixed(2);
+                }
+            }, 10);
+        }
+
+        // 👍 正解の文字を押したとき
+        function touchTarget() {
+            if (!isClickable) return;
+            isClickable = false; // 連打防止
+            clearInterval(timerInterval);
+
+            // スコア加算（残り時間が長いほど高得点）
+            score += Math.floor(timeLeft * 100);
+            document.getElementById('score-display').innerText = score;
+
+            stage++;
+            document.getElementById('stage-display').innerText = stage;
+
+            // 0.2秒だけ余韻を残して次のステージへ
+            setTimeout(nextStage, 200);
+        }
+
+        // 👎 まちがった文字を押したとき（お手つき）
+        function touchWrong(buttonElement) {
+            if (!isClickable || buttonElement.classList.contains('wrong')) return;
+            
+            // 間違えたボタンを一瞬赤く光らせる
+            buttonElement.classList.add('wrong');
+            
+            // ペナルティ：制限時間が一気に 1.5秒 減る！
+            timeLeft = Math.max(0, timeLeft - 1.5);
+            document.getElementById('timer').innerText = timeLeft.toFixed(2);
+        }
+
+        // 💀 ゲームオーバー
+        function gameOver() {
+            isClickable = false;
+            clearInterval(timerInterval);
+            alert(`⏰ TIME UP!!\n\nあなたの記録\n到達ステージ: ${stage}\n最終スコア: ${score} 点`);
+            
+            const startScreen = document.getElementById('start-screen');
+            startScreen.style.display = 'flex';
+            startScreen.querySelector('h1').innerText = "GAME OVER";
+            startScreen.querySelector('p').innerText = `スコア: ${score}点（ステージ ${stage} で撃沈）`;
+            startScreen.querySelector('.start-btn').innerText = `RETRY SYSTEM`;
+        }
+    </script>
+</body>
+</html>
