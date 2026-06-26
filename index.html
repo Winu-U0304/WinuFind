@@ -4,27 +4,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WinuFind Portal - サイバー文字探しゲーム</title>
-    <!-- 🎵 必要なフォントを一括で読み込み -->
     <link href="https://googleapis.com" rel="stylesheet">
     <link rel="icon" href="otameshi.png">
-    
     <style>
-        /* 💡 共通設定とCSS変数 */
         :root {
             --neon-color: #00f3ff;
         }
 
         body {
             margin: 0; padding: 0;
-            background-color: #05050a;
-            color: #ffffff;
+            background-color: #05050a; color: #ffffff;
             font-family: 'M PLUS 1p', sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            overflow-x: hidden;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            min-height: 100vh; overflow-x: hidden;
         }
 
         .digital-text {
@@ -32,7 +24,6 @@
             text-shadow: 0 0 8px rgba(0, 255, 102, 0.5);
         }
 
-        /* 🎬 最初のランチャー（ポータル）画面のスタイル */
         .launcher-screen {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: #05050a; display: flex; flex-direction: column;
@@ -44,59 +35,37 @@
             color: #00f3ff; text-shadow: 0 0 15px #00f3ff; margin: 0;
             transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1);
         }
-        /* 💡 1秒後に上にスライドさせるクラス */
-        .launcher-title.slide-up {
-            transform: translateY(-80px);
-        }
+        .launcher-title.slide-up { transform: translateY(-80px); }
         .menu-container {
             display: flex; gap: 20px; opacity: 0; transform: translateY(20px);
             transition: all 0.5s ease; pointer-events: none; margin-top: -20px;
         }
-        .menu-container.show {
-            opacity: 1; transform: translateY(0); pointer-events: auto;
-        }
+        .menu-container.show { opacity: 1; transform: translateY(0); pointer-events: auto; }
         .menu-btn {
             font-family: 'Orbitron', sans-serif; font-size: 20px; padding: 15px 30px;
             background: transparent; color: #00f3ff; border: 2px solid #00f3ff;
             border-radius: 10px; cursor: pointer; font-weight: bold;
             box-shadow: 0 0 15px rgba(0, 243, 255, 0.3); transition: all 0.2s;
         }
-        .menu-btn:hover {
-            background: #00f3ff; color: #000; transform: scale(1.05);
-            box-shadow: 0 0 25px #00f3ff;
-        }
+        .menu-btn:hover { background: #00f3ff; color: #000; transform: scale(1.05); box-shadow: 0 0 25px #00f3ff; }
 
-        /* 🎮 WinuFind 1（初代）専用のスタイル */
-        .wf1-body {
-            text-align: center; background: rgba(255, 255, 255, 0.02); padding: 20px;
-            border-radius: 20px; border: 2px solid var(--neon-color);
-            box-shadow: 0 0 20px var(--neon-color), inset 0 0 10px var(--neon-color);
-            max-width: 450px; width: 90%; transition: all 0.3s ease; display: none;
+        .back-to-menu-btn {
+            font-family: 'M PLUS 1p', sans-serif; font-size: 14px; padding: 10px 20px; margin-top: 20px;
+            background: #21262d; color: #8b949e; border: 1px solid #30363d; border-radius: 6px;
+            cursor: pointer; font-weight: bold; transition: all 0.2s;
         }
-        .timer-box-wf1 {
-            font-family: 'Orbitron', sans-serif; font-size: 42px;
-            color: var(--neon-color); text-shadow: 0 0 10px var(--neon-color); margin: 10px 0;
-        }
-        .grid-container-wf1 {
-            display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px;
-            margin: 20px 0; background: rgba(0, 0, 0, 0.4); padding: 10px; border-radius: 10px;
-        }
-        .char-btn {
-            font-family: 'M PLUS 1p', sans-serif; font-size: 32px; font-weight: 900;
-            background: #111; color: #ffffff; border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 8px; aspect-ratio: 1; cursor: pointer;
-            display: flex; align-items: center; justify-content: center; transition: all 0.1s;
-        }
+        .back-to-menu-btn:hover { background: #ff7b72; color: #ffffff; border-color: #ff7b72; }
+
+        .wf1-body { text-align: center; background: rgba(255, 255, 255, 0.02); padding: 20px; border-radius: 20px; border: 2px solid var(--neon-color); box-shadow: 0 0 20px var(--neon-color), inset 0 0 10px var(--neon-color); max-width: 450px; width: 90%; transition: all 0.3s ease; display: none; }
+        .timer-box-wf1 { font-family: 'Orbitron', sans-serif; font-size: 42px; color: var(--neon-color); text-shadow: 0 0 10px var(--neon-color); margin: 10px 0; }
+        .grid-container-wf1 { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; margin: 20px 0; background: rgba(0, 0, 0, 0.4); padding: 10px; border-radius: 10px; }
+        .char-btn { font-family: 'M PLUS 1p', sans-serif; font-size: 32px; font-weight: 900; background: #111; color: #ffffff; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px; aspect-ratio: 1; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.1s; }
         .char-btn:hover { background: rgba(255, 255, 255, 0.1); border-color: var(--neon-color); box-shadow: 0 0 8px var(--neon-color); }
         .char-btn.wrong { background: #ff0055 !important; border-color: #ff0055 !important; box-shadow: 0 0 15px #ff0055 !important; }
         .overlay-wf1 { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(5, 5, 10, 0.95); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 10; }
 
-        /* 🎮 WinuFind 2（最新作）専用のスタイル */
-        .wf2-body { max-width: 800px; width: 95%; display: none; }
-        #game-text {
-            font-family: 'Share Tech Mono', 'Courier New', monospace; text-align: justify; color: #58a6ff; cursor: crosshair; 
-            line-height: 1.5; padding: 0px 24px; filter: blur(8px); pointer-events: none; transition: filter 0.2s ease; user-select: none; word-break: break-all; overflow-wrap: anywhere;
-        }
+        .wf2-body { max-width: 800px; width: 95%; display: none; text-align: center; }
+        #game-text { font-family: 'Share Tech Mono', 'Courier New', monospace; text-align: justify; color: #58a6ff; cursor: crosshair; line-height: 1.5; padding: 0px 24px; filter: blur(8px); pointer-events: none; transition: filter 0.2s ease; user-select: none; word-break: break-all; overflow-wrap: anywhere; }
         .countdown-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(13, 17, 23, 0.85); display: flex; justify-content: center; align-items: center; z-index: 500; opacity: 0; pointer-events: none; transition: opacity 0.2s ease; }
         .countdown-overlay.active { opacity: 1; pointer-events: auto; }
         #countdown-number { font-size: 6rem; font-weight: bold; color: #00ff66; text-shadow: 0 0 20px rgba(0, 255, 102, 0.8); }
@@ -106,96 +75,100 @@
         .modal-btn { font-size: 1.1rem; padding: 10px 25px; background-color: #238636; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
         .mode-btn { font-size: 1rem; padding: 8px 20px; margin: 0 5px; background-color: #21262d; color: #c9d1d9; border: 1px solid #30363d; border-radius: 6px; cursor: pointer; font-weight: bold; transition: all 0.2s; }
         .mode-btn.active { background-color: #f0883e; color: white; border-color: #f0883e; }
+        .giveup-btn { font-size: 1rem; padding: 8px 20px; margin-left: 15px; background-color: #da3637; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; transition: all 0.2s; }
+        .giveup-btn:hover { background-color: #b82526; }
+        .giveup-btn:disabled { background-color: #30363d; color: #8b949e; cursor: not-allowed; }
     </style>
 </head>
 <body>
-
-    <!-- 🎬 タイトルポータル画面（1秒後にタイトルが上がってボタンが出る） -->
     <div id="launcher" class="launcher-screen">
         <h1 id="launcher-title" class="launcher-title">WinuFind</h1>
-        <p id="launcher-sub" style="color: #aaa; margin-top: 10px; margin-bottom: 30px; transition: opacity 0.5s;">CHOOSE YOUR SYSTEM</p>
         <div id="menu-container" class="menu-container">
             <button class="menu-btn" onclick="launchGame(1)">WinuFind 1</button>
             <button class="menu-btn" onclick="launchGame(2)">WinuFind 2</button>
         </div>
     </div>
 
-    <!-- ==================== 🎮 WINUFIND 1 画面 ==================== -->
     <div id="wf1-game" class="wf1-body">
         <div id="start-screen-wf1" class="overlay-wf1">
-            <h1 style="font-family: 'Orbitron', sans-serif; letter-spacing: 4px; font-size: 45px; color: var(--neon-color); text-shadow: 0 0 10px var(--neon-color); margin: 0;">WinuFind 1</h1>
-            <p style="color: #aaa; margin-top: 10px;">大量の文字から【1つだけ違う文字】を爆速で見つけ出せ！</p>
+            <h1 style="font-family: 'Orbitron', sans-serif; color: var(--neon-color);">WinuFind 1</h1>
             <button class="start-btn" style="font-family: 'Orbitron', sans-serif; font-size: 24px; padding: 15px 40px; background: transparent; color: var(--neon-color); border: 2px solid var(--neon-color); border-radius: 10px; cursor: pointer; font-weight: bold; box-shadow: 0 0 15px var(--neon-color); transition: all 0.2s; margin-top: 20px;" onclick="startGameWF1()">SYSTEM START</button>
         </div>
-        <div class="score-box" style="font-family: 'Orbitron', sans-serif; font-size: 20px; color: #aaa; margin-bottom: 10px;">STAGE: <span id="stage-display-wf1" style="color:white;">1</span> &nbsp;|&nbsp; SCORE: <span id="score-display-wf1" style="color:white;">0</span></div>
+        <div class="score-box" style="font-family: 'Orbitron', sans-serif; font-size: 20px; color: #aaa; margin-bottom: 10px;">STAGE: <span id="stage-display-wf1">1</span> | SCORE: <span id="score-display-wf1">0</span></div>
         <div id="timer-wf1" class="timer-box-wf1">10.00</div>
         <div id="grid-area-wf1" class="grid-container-wf1"></div>
-        <p style="color: #666; font-size: 14px; margin: 0;">※お手つきをすると残り時間がガッツリ減るぞ！</p>
+        <button class="back-to-menu-btn" onclick="backToMenu()">タイトルに戻る</button>
     </div>
 
-    <!-- ==================== 🎮 WINUFIND 2 画面 ==================== -->
     <div id="wf2-game" class="wf2-body">
-        <h1 style="text-align: center; background-color: #161b22; color:#f0f6fc; margin-top: 0; padding: 20px 0px; border-bottom: 1px solid #30363d; letter-spacing: 2px;">▼ WinuFind 2 - 違う文字を探せ！ ▼</h1>
-        <div style="text-align: center; font-size: 1.4rem; margin-top: 15px; margin-bottom: 15px; font-weight: bold;">
-            ✨ <span id="stage-display-wf2" style="color: #ffca28; margin-right: 15px;">STAGE 1</span>
+        <h1 style="text-align: center; background-color: #161b22; color:#f0f6fc; padding: 20px 0px; border-bottom: 1px solid #30363d; letter-spacing: 2px;">▼ WinuFind 2 - 違う文字を探せ！ ▼</h1>
+        <div style="text-align: center; font-size: 1.4rem; margin: 15px 0; font-weight: bold;">
+            ✨ <span id="stage-display-wf2" style="color: #ffca28;">STAGE 1</span>
             ⏱️ TIME: <span id="timer-wf2" class="digital-text">0.000s</span> | ❌ MISS: <span id="miss-count-wf2" style="color: #ff7b72;">0</span>
         </div>
         <div style="text-align: center; margin-bottom: 15px;">
-                    <button class="mode-btn" onclick="selectDifficulty('easy')">EASY</button>
-                    <button class="mode-btn active" onclick="selectDifficulty('normal')">NORMAL</button>
-                    <button class="mode-btn" onclick="selectDifficulty('hard')">HARD</button>
-          </div>
-          <div style="text-align: center; margin-bottom: 25px;">
-                    <button id="start-btn-wf2" style="font-size: 1.2rem; padding: 12px 35px; background-color: #1f6feb; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold;">
-                              GAME START
-                    </button>
-          </div>
-          <h2 id="game-info-wf2" style="text-align: center; margin-top: 0; color: #8b949e; font-size: 1.1rem;">[ ロード中... ]</h2>
-          <p id="game-text"></p>
-          <div id="countdown-screen" class="countdown-overlay">
-                    <div id="countdown-number">3</div>
-          </div>
-          <div id="custom-modal" class="modal-overlay">
-                    <div class="modal-content">
-                              <h2 id="modal-title" style="margin-top: 0; font-size: 2rem;"></h2>
-                              <p id="modal-body" style="font-size: 1.2rem; margin: 20px 0; line-height: 1.6;"></p>
-                              <button id="modal-close-btn" class="modal-btn">次へ進む</button>
-                    </div>
-          </div>
+            <button class="mode-btn" onclick="selectDifficulty('easy')">EASY</button>
+            <button class="mode-btn active" onclick="selectDifficulty('normal')">NORMAL</button>
+            <button class="mode-btn" onclick="selectDifficulty('hard')">HARD</button>
+        </div>
+        <div style="text-align: center; margin-bottom: 25px;">
+            <button id="start-btn-wf2" style="font-size: 1.2rem; padding: 12px 35px; background-color: #1f6feb; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold;">GAME START</button>
+            <button id="giveup-btn-wf2" class="giveup-btn" onclick="giveUpWF2()" disabled>GIVE UP</button>
+        </div>
+        <h2 id="game-info-wf2" style="text-align: center; color: #8b949e; font-size: 1.1rem;">[ ロード中... ]</h2>
+        <p id="game-text"></p>
+        <div id="countdown-screen" class="countdown-overlay">
+            <div id="countdown-number">3</div>
+        </div>
+        <div id="custom-modal" class="modal-overlay">
+            <div class="modal-content">
+                <h2 id="modal-title" style="margin-top: 0; font-size: 2rem;"></h2>
+                <p id="modal-body" style="font-size: 1.2rem; margin: 20px 0; line-height: 1.6;"></p>
+                <button id="modal-close-btn" class="modal-btn">次へ進む</button>
+            </div>
+        </div>
+        <button class="back-to-menu-btn" onclick="backToMenu()">タイトルに戻る</button>
     </div>
 
     <script>
-        // 🎬 ランチャー画面の1秒後アニメーション演出
         window.addEventListener('DOMContentLoaded', () => {
             setTimeout(() => {
                 document.getElementById('launcher-title').classList.add('slide-up');
-                document.getElementById('launcher-sub').style.opacity = '0';
                 document.getElementById('menu-container').classList.add('show');
             }, 1000);
         });
 
-        // 🎮 ゲームを起動する関数
         function launchGame(gameNum) {
             document.getElementById('launcher').style.opacity = '0';
             setTimeout(() => {
                 document.getElementById('launcher').style.display = 'none';
                 if (gameNum === 1) {
                     document.getElementById('wf1-game').style.display = 'block';
+                    document.getElementById('start-screen-wf1').style.display = 'flex';
                 } else if (gameNum === 2) {
                     document.getElementById('wf2-game').style.display = 'block';
-                    generateTextWF2(); // 最初の表示をロード
+                    generateTextWF2();
                 }
             }, 500);
         }
 
-        // ⛩️ 共通で使う漢字ペア
+        function backToMenu() {
+            clearInterval(timerIntervalWF1);
+            clearInterval(timerIntervalWF2);
+            isGameOverWF2 = true;
+            document.getElementById('wf1-game').style.display = 'none';
+            document.getElementById('wf2-game').style.display = 'none';
+            const launcher = document.getElementById('launcher');
+            launcher.style.display = 'flex';
+            launcher.style.opacity = '1';
+        }
+
         const charPairs = [
             ['大', '太'], ['輪', '輸'], ['微', '徴'], ['白', '百'], ['問', '間'],
             ['己', '已'], ['柿', '杮'], ['崇', '祟'], ['拾', '拾'], ['璧', '壁']
         ];
         const neonColors = ['#00f3ff', '#00ff66', '#ff0055', '#ffcc00', '#ff00ff', '#ff3300'];
 
-        // 💡 共通サウンドシステム
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         function playSound(type) {
             const osc = audioCtx.createOscillator();
@@ -241,6 +214,8 @@
             document.documentElement.style.setProperty('--neon-color', randomColor);
 
             const currentPair = charPairs[Math.floor(Math.random() * charPairs.length)];
+            const normalChar = currentPair[0];
+            const targetChar = currentPair[1];
             const totalCells = 36;
             const targetIndex = Math.floor(Math.random() * totalCells);
 
@@ -251,10 +226,10 @@
                 const btn = document.createElement('button');
                 btn.className = 'char-btn';
                 if (i === targetIndex) {
-                    btn.innerText = currentPair[1];
+                    btn.innerText = targetChar;
                     btn.onclick = () => touchTargetWF1();
                 } else {
-                    btn.innerText = currentPair[0];
+                    btn.innerText = normalChar;
                     btn.onclick = (e) => touchWrongWF1(e.target);
                 }
                 gridArea.appendChild(btn);
@@ -299,14 +274,15 @@
             const startScreen = document.getElementById('start-screen-wf1');
             startScreen.style.display = 'flex';
             startScreen.querySelector('h1').innerText = "GAME OVER";
-            startScreen.querySelector('p').innerText = `スコア: ${scoreWF1}点（ステージ ${stageWF1} で撃沈）`;
             startScreen.querySelector('.start-btn').innerText = `RETRY SYSTEM`;
         }
+
         // ==================== 🎮 WINUFIND 2 ロジック ====================
         const targetArea = document.getElementById('game-text');
         const timerElement = document.getElementById('timer-wf2');
         const missElement = document.getElementById('miss-count-wf2');
         const startButtonWF2 = document.getElementById('start-btn-wf2');
+        const giveupButtonWF2 = document.getElementById('giveup-btn-wf2');
         const countdownScreen = document.getElementById('countdown-screen');
         const countdownNumber = document.getElementById('countdown-number');
         const customModal = document.getElementById('custom-modal');
@@ -317,8 +293,7 @@
         const gameInfoWF2 = document.getElementById('game-info-wf2');
         
         let startTimeWF2, timerIntervalWF2, missCountWF2 = 0, isGameOverWF2 = true;
-        let currentStageWF2 = 1;
-        let selectedDifficultyMode = 'normal';
+        let currentStageWF2 = 1, selectedDifficultyMode = 'normal';
 
         function selectDifficulty(mode) {
             if (!isGameOverWF2) return;
@@ -328,7 +303,6 @@
             event.target.classList.add('active');
             generateTextWF2();
         }
-
         function generateTextWF2() {
             let baseCount = 1000;
             if (selectedDifficultyMode === 'easy') baseCount = 600;
@@ -348,7 +322,7 @@
 
             for (let i = 0; i < totalCharacters; i++) {
                 if (i === answerIndex) {
-                    textHtml += `<span id="correct-answer" style="cursor: crosshair; color: #58a6ff;">${correctChar}</span> `;
+                    textHtml += `<span id="correct-answer" style="cursor: crosshair; color: #58a6ff; transition: all 0.3s ease;">${correctChar}</span> `;
                 } else {
                     textHtml += normalChar + " ";
                 }
@@ -360,15 +334,39 @@
                 correctElem.addEventListener('click', function(event) {
                     if (isGameOverWF2) return;
                     isGameOverWF2 = true; clearInterval(timerIntervalWF2);
+                    giveupButtonWF2.disabled = true;
                     playSound('clear');
 
                     const finalTime = ((Date.now() - startTimeWF2) / 1000).toFixed(3);
-                    this.style.color = '#ff7b72'; this.style.fontWeight = 'bold'; this.style.fontSize = '1.4em';
+                    this.style.color = '#ffaa00'; this.style.fontWeight = 'bold'; this.style.fontSize = '1.4em';
 
                     currentStageWF2++;
                     showModal('<span style="color: #00ff66;">🎉 CLEAR !!</span>', `<b style="font-size: 1.4rem;">⏱️ TIME: ${finalTime}秒</b><br><b style="font-size: 1.4rem; color: #ff7b72;">❌ MISS: ${missCountWF2}回</b><br><br><span style="color: #ffca28; font-weight: bold;">次は STAGE ${currentStageWF2} に挑戦！</span>`, 3);
                 });
             }
+        }
+
+        function giveUpWF2() {
+            if (isGameOverWF2) return;
+            isGameOverWF2 = true;
+            clearInterval(timerIntervalWF2);
+            giveupButtonWF2.disabled = true;
+            playSound('miss');
+
+            const correctAnswer = document.getElementById('correct-answer');
+            if (correctAnswer) {
+                correctAnswer.style.color = '#ff0055';
+                correctAnswer.style.fontSize = '2.5rem';
+                correctAnswer.style.fontWeight = '900';
+                correctAnswer.style.textShadow = '0 0 15px #ff0055';
+                correctAnswer.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+
+            showModal(
+                '<span style="color: #ff7b72;">🏳️ GIVE UP</span>',
+                '<b style="font-size: 1.2rem; color: #ff7b72;">ここに隠れてたよ！</b><br><br>見つけられなかったね。次こそは見つけ出そう！',
+                0
+            );
         }
 
         function showModal(title, message, blurAmount) {
@@ -393,6 +391,7 @@
         startButtonWF2.addEventListener('click', function() {
             if (audioCtx.state === 'suspended') audioCtx.resume();
             startButtonWF2.disabled = true; startButtonWF2.style.backgroundColor = '#30363d'; startButtonWF2.style.color = '#8b949e'; startButtonWF2.style.cursor = 'not-allowed';
+            giveupButtonWF2.disabled = false;
             generateTextWF2();
 
             runCountdown(() => {
