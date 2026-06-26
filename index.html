@@ -3,17 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WinuFind - サイバー文字探しゲーム</title>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=M+PLUS+1p:wght@900&display=swap" rel="stylesheet">
+    <title>WinuFind Portal - サイバー文字探しゲーム</title>
+    <!-- 🎵 必要なフォントを一括で読み込み -->
+    <link href="https://googleapis.com" rel="stylesheet">
+    <link rel="icon" href="otameshi.png">
     
     <style>
-        /* 毎回変わるネオンカラーの初期値 */
+        /* 💡 共通設定とCSS変数 */
         :root {
             --neon-color: #00f3ff;
         }
 
         body {
-            margin: 0;
+            margin: 0; padding: 0;
             background-color: #05050a;
             color: #ffffff;
             font-family: 'M PLUS 1p', sans-serif;
@@ -22,262 +24,409 @@
             align-items: center;
             justify-content: center;
             min-height: 100vh;
-            overflow: hidden;
+            overflow-x: hidden;
         }
 
-        /* ゲーム全体の枠 */
-        .game-container {
-            text-align: center;
-            background: rgba(255, 255, 255, 0.02);
-            padding: 20px;
-            border-radius: 20px;
-            border: 2px solid var(--neon-color);
+        .digital-text {
+            font-family: 'Share Tech Mono', monospace; color: #00ff66;
+            text-shadow: 0 0 8px rgba(0, 255, 102, 0.5);
+        }
+
+        /* 🎬 最初のランチャー（ポータル）画面のスタイル */
+        .launcher-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #05050a; display: flex; flex-direction: column;
+            align-items: center; justify-content: center; z-index: 2000;
+            transition: all 0.5s ease;
+        }
+        .launcher-title {
+            font-family: 'Orbitron', sans-serif; letter-spacing: 4px; font-size: 55px; 
+            color: #00f3ff; text-shadow: 0 0 15px #00f3ff; margin: 0;
+            transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+        /* 💡 1秒後に上にスライドさせるクラス */
+        .launcher-title.slide-up {
+            transform: translateY(-80px);
+        }
+        .menu-container {
+            display: flex; gap: 20px; opacity: 0; transform: translateY(20px);
+            transition: all 0.5s ease; pointer-events: none; margin-top: -20px;
+        }
+        .menu-container.show {
+            opacity: 1; transform: translateY(0); pointer-events: auto;
+        }
+        .menu-btn {
+            font-family: 'Orbitron', sans-serif; font-size: 20px; padding: 15px 30px;
+            background: transparent; color: #00f3ff; border: 2px solid #00f3ff;
+            border-radius: 10px; cursor: pointer; font-weight: bold;
+            box-shadow: 0 0 15px rgba(0, 243, 255, 0.3); transition: all 0.2s;
+        }
+        .menu-btn:hover {
+            background: #00f3ff; color: #000; transform: scale(1.05);
+            box-shadow: 0 0 25px #00f3ff;
+        }
+
+        /* 🎮 WinuFind 1（初代）専用のスタイル */
+        .wf1-body {
+            text-align: center; background: rgba(255, 255, 255, 0.02); padding: 20px;
+            border-radius: 20px; border: 2px solid var(--neon-color);
             box-shadow: 0 0 20px var(--neon-color), inset 0 0 10px var(--neon-color);
-            max-width: 450px;
-            width: 90%;
-            transition: all 0.3s ease;
+            max-width: 450px; width: 90%; transition: all 0.3s ease; display: none;
         }
-
-        /* 100分の1秒タイマー */
-        .timer-box {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 42px;
-            color: var(--neon-color);
-            text-shadow: 0 0 10px var(--neon-color);
-            margin: 10px 0;
+        .timer-box-wf1 {
+            font-family: 'Orbitron', sans-serif; font-size: 42px;
+            color: var(--neon-color); text-shadow: 0 0 10px var(--neon-color); margin: 10px 0;
         }
-
-        .score-box {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 20px;
-            color: #aaa;
-            margin-bottom: 10px;
+        .grid-container-wf1 {
+            display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px;
+            margin: 20px 0; background: rgba(0, 0, 0, 0.4); padding: 10px; border-radius: 10px;
         }
-
-        /* 文字が大量に並ぶグリッド（6マス × 6マス = 36個） */
-        .grid-container {
-            display: grid;
-            grid-template-columns: repeat(6, 1fr);
-            gap: 8px;
-            margin: 20px 0;
-            background: rgba(0, 0, 0, 0.4);
-            padding: 10px;
-            border-radius: 10px;
-        }
-
-        /* 文字ボタン（サイバー風デザイン） */
         .char-btn {
-            font-family: 'M PLUS 1p', sans-serif;
-            font-size: 32px; /* 字体がハッキリ大きく見えるように */
-            font-weight: 900;
-            background: #111;
-            color: #ffffff;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 8px;
-            aspect-ratio: 1; /* 正方形にする */
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.1s;
+            font-family: 'M PLUS 1p', sans-serif; font-size: 32px; font-weight: 900;
+            background: #111; color: #ffffff; border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px; aspect-ratio: 1; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; transition: all 0.1s;
         }
+        .char-btn:hover { background: rgba(255, 255, 255, 0.1); border-color: var(--neon-color); box-shadow: 0 0 8px var(--neon-color); }
+        .char-btn.wrong { background: #ff0055 !important; border-color: #ff0055 !important; box-shadow: 0 0 15px #ff0055 !important; }
+        .overlay-wf1 { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(5, 5, 10, 0.95); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 10; }
 
-        /* マウスを乗せたとき */
-        .char-btn:hover {
-            background: rgba(255, 255, 255, 0.1);
-            border-color: var(--neon-color);
-            box-shadow: 0 0 8px var(--neon-color);
+        /* 🎮 WinuFind 2（最新作）専用のスタイル */
+        .wf2-body { max-width: 800px; width: 95%; display: none; }
+        #game-text {
+            font-family: 'Share Tech Mono', 'Courier New', monospace; text-align: justify; color: #58a6ff; cursor: crosshair; 
+            line-height: 1.5; padding: 0px 24px; filter: blur(8px); pointer-events: none; transition: filter 0.2s ease; user-select: none; word-break: break-all; overflow-wrap: anywhere;
         }
-
-        /* お手つき（間違えたボタン）の演出 */
-        .char-btn.wrong {
-            background: #ff0055 !important;
-            border-color: #ff0055 !important;
-            box-shadow: 0 0 15px #ff0055 !important;
-        }
-
-        /* スタート・ゲームオーバー画面 */
-        .overlay {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(5, 5, 10, 0.95);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            z-index: 10;
-        }
-
-        .start-btn {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 24px;
-            padding: 15px 40px;
-            background: transparent;
-            color: var(--neon-color);
-            border: 2px solid var(--neon-color);
-            border-radius: 10px;
-            cursor: pointer;
-            font-weight: bold;
-            box-shadow: 0 0 15px var(--neon-color);
-            transition: all 0.2s;
-            margin-top: 20px;
-        }
-
-        .start-btn:hover {
-            background: var(--neon-color);
-            color: #000;
-            transform: scale(1.05);
-        }
+        .countdown-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(13, 17, 23, 0.85); display: flex; justify-content: center; align-items: center; z-index: 500; opacity: 0; pointer-events: none; transition: opacity 0.2s ease; }
+        .countdown-overlay.active { opacity: 1; pointer-events: auto; }
+        #countdown-number { font-size: 6rem; font-weight: bold; color: #00ff66; text-shadow: 0 0 20px rgba(0, 255, 102, 0.8); }
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.7); display: flex; justify-content: center; align-items: center; z-index: 1000; opacity: 0; pointer-events: none; transition: opacity 0.2s ease; }
+        .modal-overlay.active { opacity: 1; pointer-events: auto; }
+        .modal-content { background: #161b22; padding: 30px; border-radius: 12px; border: 2px solid #30363d; text-align: center; max-width: 85%; }
+        .modal-btn { font-size: 1.1rem; padding: 10px 25px; background-color: #238636; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        .mode-btn { font-size: 1rem; padding: 8px 20px; margin: 0 5px; background-color: #21262d; color: #c9d1d9; border: 1px solid #30363d; border-radius: 6px; cursor: pointer; font-weight: bold; transition: all 0.2s; }
+        .mode-btn.active { background-color: #f0883e; color: white; border-color: #f0883e; }
     </style>
 </head>
 <body>
 
-    <div id="start-screen" class="overlay">
-        <h1 style="font-family: 'Orbitron', sans-serif; letter-spacing: 4px; font-size: 45px; color: var(--neon-color); text-shadow: 0 0 10px var(--neon-color); margin: 0;">WinuFind</h1>
-        <p style="color: #aaa; margin-top: 10px;">大量の文字から【1つだけ違う文字】を爆速で見つけ出せ！</p>
-        <button class="start-btn" onclick="startGame()">SYSTEM START</button>
+    <!-- 🎬 タイトルポータル画面（1秒後にタイトルが上がってボタンが出る） -->
+    <div id="launcher" class="launcher-screen">
+        <h1 id="launcher-title" class="launcher-title">WinuFind</h1>
+        <p id="launcher-sub" style="color: #aaa; margin-top: 10px; margin-bottom: 30px; transition: opacity 0.5s;">CHOOSE YOUR SYSTEM</p>
+        <div id="menu-container" class="menu-container">
+            <button class="menu-btn" onclick="launchGame(1)">WinuFind 1</button>
+            <button class="menu-btn" onclick="launchGame(2)">WinuFind 2</button>
+        </div>
     </div>
 
-    <div class="game-container">
-        <div class="score-box">STAGE: <span id="stage-display" style="color:white;">1</span> &nbsp;|&nbsp; SCORE: <span id="score-display" style="color:white;">0</span></div>
-        
-        <div id="timer" class="timer-box">10.00</div>
-
-        <div id="grid-area" class="grid-container"></div>
-        
+    <!-- ==================== 🎮 WINUFIND 1 画面 ==================== -->
+    <div id="wf1-game" class="wf1-body">
+        <div id="start-screen-wf1" class="overlay-wf1">
+            <h1 style="font-family: 'Orbitron', sans-serif; letter-spacing: 4px; font-size: 45px; color: var(--neon-color); text-shadow: 0 0 10px var(--neon-color); margin: 0;">WinuFind 1</h1>
+            <p style="color: #aaa; margin-top: 10px;">大量の文字から【1つだけ違う文字】を爆速で見つけ出せ！</p>
+            <button class="start-btn" style="font-family: 'Orbitron', sans-serif; font-size: 24px; padding: 15px 40px; background: transparent; color: var(--neon-color); border: 2px solid var(--neon-color); border-radius: 10px; cursor: pointer; font-weight: bold; box-shadow: 0 0 15px var(--neon-color); transition: all 0.2s; margin-top: 20px;" onclick="startGameWF1()">SYSTEM START</button>
+        </div>
+        <div class="score-box" style="font-family: 'Orbitron', sans-serif; font-size: 20px; color: #aaa; margin-bottom: 10px;">STAGE: <span id="stage-display-wf1" style="color:white;">1</span> &nbsp;|&nbsp; SCORE: <span id="score-display-wf1" style="color:white;">0</span></div>
+        <div id="timer-wf1" class="timer-box-wf1">10.00</div>
+        <div id="grid-area-wf1" class="grid-container-wf1"></div>
         <p style="color: #666; font-size: 14px; margin: 0;">※お手つきをすると残り時間がガッツリ減るぞ！</p>
     </div>
 
+    <!-- ==================== 🎮 WINUFIND 2 画面 ==================== -->
+    <div id="wf2-game" class="wf2-body">
+        <h1 style="text-align: center; background-color: #161b22; color:#f0f6fc; margin-top: 0; padding: 20px 0px; border-bottom: 1px solid #30363d; letter-spacing: 2px;">▼ WinuFind 2 - 違う文字を探せ！ ▼</h1>
+        <div style="text-align: center; font-size: 1.4rem; margin-top: 15px; margin-bottom: 15px; font-weight: bold;">
+            ✨ <span id="stage-display-wf2" style="color: #ffca28; margin-right: 15px;">STAGE 1</span>
+            ⏱️ TIME: <span id="timer-wf2" class="digital-text">0.000s</span> | ❌ MISS: <span id="miss-count-wf2" style="color: #ff7b72;">0</span>
+        </div>
+        <div style="text-align: center; margin-bottom: 15px;">
+                    <button class="mode-btn" onclick="selectDifficulty('easy')">EASY</button>
+                    <button class="mode-btn active" onclick="selectDifficulty('normal')">NORMAL</button>
+                    <button class="mode-btn" onclick="selectDifficulty('hard')">HARD</button>
+          </div>
+          <div style="text-align: center; margin-bottom: 25px;">
+                    <button id="start-btn-wf2" style="font-size: 1.2rem; padding: 12px 35px; background-color: #1f6feb; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold;">
+                              GAME START
+                    </button>
+          </div>
+          <h2 id="game-info-wf2" style="text-align: center; margin-top: 0; color: #8b949e; font-size: 1.1rem;">[ ロード中... ]</h2>
+          <p id="game-text"></p>
+          <div id="countdown-screen" class="countdown-overlay">
+                    <div id="countdown-number">3</div>
+          </div>
+          <div id="custom-modal" class="modal-overlay">
+                    <div class="modal-content">
+                              <h2 id="modal-title" style="margin-top: 0; font-size: 2rem;"></h2>
+                              <p id="modal-body" style="font-size: 1.2rem; margin: 20px 0; line-height: 1.6;"></p>
+                              <button id="modal-close-btn" class="modal-btn">次へ進む</button>
+                    </div>
+          </div>
+    </div>
+
     <script>
-        // 💡 毎回変わる「普通の文字」と「違う文字」のペアリスト（サイバー感あるものや漢字）
-        const charPairs = [
-            { normal: "木", target: "本" },
-            { normal: "大", target: "太" },
-            { normal: "白", target: "百" },
-            { normal: "目", target: "自" },
-            { normal: "日", target: "曰" },
-            { normal: "壁", target: "璧" },
-            { normal: "間", target: "闇" },
-            { normal: "鳥", target: "烏" },
-            { normal: "O", target: "0" }, // アルファベットのオーと数字のゼロ
-            { normal: "1", target: "l" }, // 数字のイチと小文字のエル
-            { normal: "シ", target: "ツ" },
-            { normal: "ろ", target: "る" }
-        ];
+        // 🎬 ランチャー画面の1秒後アニメーション演出
+        window.addEventListener('DOMContentLoaded', () => {
+            setTimeout(() => {
+                document.getElementById('launcher-title').classList.add('slide-up');
+                document.getElementById('launcher-sub').style.opacity = '0';
+                document.getElementById('menu-container').classList.add('show');
+            }, 1000);
+        });
 
-        // 毎回変わるネオンカラー
-        const neonColors = ['#00f3ff', '#00ff66', '#ff0055', '#ffcc00', '#ff00ff', '#ff3300'];
-
-        let stage = 1;
-        let score = 0;
-        let timeLeft = 10.00;
-        let timerInterval = null;
-        let isClickable = true;
-
-        // ゲーム開始
-        function startGame() {
-            stage = 1;
-            score = 0;
-            document.getElementById('start-screen').style.display = 'none';
-            document.getElementById('stage-display').innerText = stage;
-            document.getElementById('score-display').innerText = score;
-            nextStage();
+        // 🎮 ゲームを起動する関数
+        function launchGame(gameNum) {
+            document.getElementById('launcher').style.opacity = '0';
+            setTimeout(() => {
+                document.getElementById('launcher').style.display = 'none';
+                if (gameNum === 1) {
+                    document.getElementById('wf1-game').style.display = 'block';
+                } else if (gameNum === 2) {
+                    document.getElementById('wf2-game').style.display = 'block';
+                    generateTextWF2(); // 最初の表示をロード
+                }
+            }, 500);
         }
 
-        // 次のステージ（問題）を生成
-        function nextStage() {
-            isClickable = true;
-            
-            // 💡 1回一回違う部分が変わる演出①：画面のネオンカラーをランダム変更！
+        // ⛩️ 共通で使う漢字ペア
+        const charPairs = [
+            ['大', '太'], ['輪', '輸'], ['微', '徴'], ['白', '百'], ['問', '間'],
+            ['己', '已'], ['柿', '杮'], ['崇', '祟'], ['拾', '拾'], ['璧', '壁']
+        ];
+        const neonColors = ['#00f3ff', '#00ff66', '#ff0055', '#ffcc00', '#ff00ff', '#ff3300'];
+
+        // 💡 共通サウンドシステム
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        function playSound(type) {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain); gain.connect(audioCtx.destination);
+            const now = audioCtx.currentTime;
+
+            if (type === 'tick') {
+                osc.type = 'sine'; osc.frequency.setValueAtTime(880, now);
+                gain.gain.setValueAtTime(0.1, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+                osc.start(now); osc.stop(now + 0.1);
+            } else if (type === 'start') {
+                osc.type = 'sine'; osc.frequency.setValueAtTime(1320, now);
+                gain.gain.setValueAtTime(0.15, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+                osc.start(now); osc.stop(now + 0.4);
+            } else if (type === 'clear') {
+                osc.type = 'triangle'; osc.frequency.setValueAtTime(523.25, now);
+                osc.frequency.setValueAtTime(659.25, now + 0.08); osc.frequency.setValueAtTime(783.99, now + 0.16); osc.frequency.setValueAtTime(1046.50, now + 0.24);
+                gain.gain.setValueAtTime(0.15, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+                osc.start(now); osc.stop(now + 0.4);
+            } else if (type === 'miss') {
+                osc.type = 'square'; osc.frequency.setValueAtTime(150, now); osc.frequency.setValueAtTime(120, now + 0.08);
+                gain.gain.setValueAtTime(0.15, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
+                osc.start(now); osc.stop(now + 0.25);
+            }
+        }
+        // ==================== 🎮 WINUFIND 1 ロジック ====================
+        let stageWF1 = 1, scoreWF1 = 0, timeLeftWF1 = 10.00, timerIntervalWF1 = null, isClickableWF1 = true;
+
+        function startGameWF1() {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            stageWF1 = 1; scoreWF1 = 0;
+            document.getElementById('start-screen-wf1').style.display = 'none';
+            document.getElementById('stage-display-wf1').innerText = stageWF1;
+            document.getElementById('score-display-wf1').innerText = scoreWF1;
+            playSound('start');
+            nextStageWF1();
+        }
+
+        function nextStageWF1() {
+            isClickableWF1 = true;
             const randomColor = neonColors[Math.floor(Math.random() * neonColors.length)];
             document.documentElement.style.setProperty('--neon-color', randomColor);
 
-            // 💡 1回一回違う部分が変わる演出②：文字の組み合わせをランダム選択！
             const currentPair = charPairs[Math.floor(Math.random() * charPairs.length)];
-            
-            // 6x6 = 36マスのうち、1箇所だけランダムな「違う文字の場所」を決める！
             const totalCells = 36;
             const targetIndex = Math.floor(Math.random() * totalCells);
 
-            const gridArea = document.getElementById('grid-area');
-            gridArea.innerHTML = ""; // 前の画面をクリア
+            const gridArea = document.getElementById('grid-area-wf1');
+            gridArea.innerHTML = "";
 
-            // ボタンを36個敷き詰める
             for (let i = 0; i < totalCells; i++) {
                 const btn = document.createElement('button');
                 btn.className = 'char-btn';
-                
-                // 💡 違う文字を毎回違う場所にセットする核心部分！
                 if (i === targetIndex) {
-                    btn.innerText = currentPair.target; // 1つだけ違う文字
-                    btn.onclick = () => touchTarget();  // 正解の処理
+                    btn.innerText = currentPair[1];
+                    btn.onclick = () => touchTargetWF1();
                 } else {
-                    btn.innerText = currentPair.normal; // いつもの文字
-                    btn.onclick = (e) => touchWrong(e.target); // 不正解の処理
+                    btn.innerText = currentPair[0];
+                    btn.onclick = (e) => touchWrongWF1(e.target);
                 }
-                
                 gridArea.appendChild(btn);
             }
 
-            // 💡 制限時間をセット（ステージが進むほど初期時間が短くなり難しくなる！）
-            timeLeft = Math.max(3.00, 10.00 - (stage * 0.3)); 
-            document.getElementById('timer').innerText = timeLeft.toFixed(2);
+            timeLeftWF1 = Math.max(3.00, 10.00 - (stageWF1 * 0.3));
+            document.getElementById('timer-wf1').innerText = timeLeftWF1.toFixed(2);
             
-            clearInterval(timerInterval);
-            // 0.01秒（10ミリ秒）ごとに超高速カウントダウン！
-            timerInterval = setInterval(() => {
-                timeLeft -= 0.01;
-                if (timeLeft <= 0) {
-                    timeLeft = 0;
-                    document.getElementById('timer').innerText = "0.00";
-                    gameOver();
+            clearInterval(timerIntervalWF1);
+            timerIntervalWF1 = setInterval(() => {
+                timeLeftWF1 -= 0.01;
+                if (timeLeftWF1 <= 0) {
+                    timeLeftWF1 = 0; document.getElementById('timer-wf1').innerText = "0.00";
+                    gameOverWF1();
                 } else {
-                    document.getElementById('timer').innerText = timeLeft.toFixed(2);
+                    document.getElementById('timer-wf1').innerText = timeLeftWF1.toFixed(2);
                 }
             }, 10);
         }
 
-        // 👍 正解の文字を押したとき
-        function touchTarget() {
-            if (!isClickable) return;
-            isClickable = false; // 連打防止
-            clearInterval(timerInterval);
-
-            // スコア加算（残り時間が長いほど高得点）
-            score += Math.floor(timeLeft * 100);
-            document.getElementById('score-display').innerText = score;
-
-            stage++;
-            document.getElementById('stage-display').innerText = stage;
-
-            // 0.2秒だけ余韻を残して次のステージへ
-            setTimeout(nextStage, 200);
+        function touchTargetWF1() {
+            if (!isClickableWF1) return;
+            isClickableWF1 = false; clearInterval(timerIntervalWF1);
+            playSound('clear');
+            scoreWF1 += Math.floor(timeLeftWF1 * 100);
+            document.getElementById('score-display-wf1').innerText = scoreWF1;
+            stageWF1++; document.getElementById('stage-display-wf1').innerText = stageWF1;
+            setTimeout(nextStageWF1, 200);
         }
 
-        // 👎 まちがった文字を押したとき（お手つき）
-        function touchWrong(buttonElement) {
-            if (!isClickable || buttonElement.classList.contains('wrong')) return;
-            
-            // 間違えたボタンを一瞬赤く光らせる
+        function touchWrongWF1(buttonElement) {
+            if (!isClickableWF1 || buttonElement.classList.contains('wrong')) return;
             buttonElement.classList.add('wrong');
-            
-            // ペナルティ：制限時間が一気に 1.5秒 減る！
-            timeLeft = Math.max(0, timeLeft - 1.5);
-            document.getElementById('timer').innerText = timeLeft.toFixed(2);
+            playSound('miss');
+            timeLeftWF1 = Math.max(0, timeLeftWF1 - 1.5);
+            document.getElementById('timer-wf1').innerText = timeLeftWF1.toFixed(2);
         }
 
-        // 💀 ゲームオーバー
-        function gameOver() {
-            isClickable = false;
-            clearInterval(timerInterval);
-            alert(`⏰ TIME UP!!\n\nあなたの記録\n到達ステージ: ${stage}\n最終スコア: ${score} 点`);
-            
-            const startScreen = document.getElementById('start-screen');
+        function gameOverWF1() {
+            isClickableWF1 = false; clearInterval(timerIntervalWF1);
+            alert(`⏰ TIME UP!!\n\nあなたの記録\n到達ステージ: ${stageWF1}\n最終スコア: ${scoreWF1} 点`);
+            const startScreen = document.getElementById('start-screen-wf1');
             startScreen.style.display = 'flex';
             startScreen.querySelector('h1').innerText = "GAME OVER";
-            startScreen.querySelector('p').innerText = `スコア: ${score}点（ステージ ${stage} で撃沈）`;
+            startScreen.querySelector('p').innerText = `スコア: ${scoreWF1}点（ステージ ${stageWF1} で撃沈）`;
             startScreen.querySelector('.start-btn').innerText = `RETRY SYSTEM`;
         }
+        // ==================== 🎮 WINUFIND 2 ロジック ====================
+        const targetArea = document.getElementById('game-text');
+        const timerElement = document.getElementById('timer-wf2');
+        const missElement = document.getElementById('miss-count-wf2');
+        const startButtonWF2 = document.getElementById('start-btn-wf2');
+        const countdownScreen = document.getElementById('countdown-screen');
+        const countdownNumber = document.getElementById('countdown-number');
+        const customModal = document.getElementById('custom-modal');
+        const modalTitle = document.getElementById('modal-title');
+        const modalBody = document.getElementById('modal-body');
+        const modalCloseBtn = document.getElementById('modal-close-btn');
+        const stageDisplayWF2 = document.getElementById('stage-display-wf2');
+        const gameInfoWF2 = document.getElementById('game-info-wf2');
+        
+        let startTimeWF2, timerIntervalWF2, missCountWF2 = 0, isGameOverWF2 = true;
+        let currentStageWF2 = 1;
+        let selectedDifficultyMode = 'normal';
+
+        function selectDifficulty(mode) {
+            if (!isGameOverWF2) return;
+            selectedDifficultyMode = mode;
+            const buttons = document.querySelectorAll('.mode-btn');
+            buttons.forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            generateTextWF2();
+        }
+
+        function generateTextWF2() {
+            let baseCount = 1000;
+            if (selectedDifficultyMode === 'easy') baseCount = 600;
+            if (selectedDifficultyMode === 'hard') baseCount = 1600;
+
+            const totalCharacters = Math.min(baseCount + (currentStageWF2 - 1) * 200, 2400);
+            if (totalCharacters <= 1000) { targetArea.style.fontSize = '24px'; } else { targetArea.style.fontSize = '20px'; }
+            
+            const randomPair = charPairs[Math.floor(Math.random() * charPairs.length)];
+            const normalChar = randomPair[0]; const correctChar = randomPair[1];
+
+            gameInfoWF2.textContent = `[ ${normalChar}が${totalCharacters - 1}文字 / その他1文字 ]`;
+            stageDisplayWF2.textContent = `STAGE ${currentStageWF2}`;
+
+            let textHtml = "";
+            const answerIndex = Math.floor(Math.random() * totalCharacters);
+
+            for (let i = 0; i < totalCharacters; i++) {
+                if (i === answerIndex) {
+                    textHtml += `<span id="correct-answer" style="cursor: crosshair; color: #58a6ff;">${correctChar}</span> `;
+                } else {
+                    textHtml += normalChar + " ";
+                }
+            }
+            targetArea.innerHTML = textHtml;
+
+            const correctElem = document.getElementById('correct-answer');
+            if (correctElem) {
+                correctElem.addEventListener('click', function(event) {
+                    if (isGameOverWF2) return;
+                    isGameOverWF2 = true; clearInterval(timerIntervalWF2);
+                    playSound('clear');
+
+                    const finalTime = ((Date.now() - startTimeWF2) / 1000).toFixed(3);
+                    this.style.color = '#ff7b72'; this.style.fontWeight = 'bold'; this.style.fontSize = '1.4em';
+
+                    currentStageWF2++;
+                    showModal('<span style="color: #00ff66;">🎉 CLEAR !!</span>', `<b style="font-size: 1.4rem;">⏱️ TIME: ${finalTime}秒</b><br><b style="font-size: 1.4rem; color: #ff7b72;">❌ MISS: ${missCountWF2}回</b><br><br><span style="color: #ffca28; font-weight: bold;">次は STAGE ${currentStageWF2} に挑戦！</span>`, 3);
+                });
+            }
+        }
+
+        function showModal(title, message, blurAmount) {
+            targetArea.style.filter = `blur(${blurAmount}px)`;
+            modalTitle.innerHTML = title; modalBody.innerHTML = message;
+            customModal.classList.add('active');
+        }
+
+        function runCountdown(callback) {
+            countdownScreen.classList.add('active');
+            let count = 3; countdownNumber.textContent = count;
+            playSound('tick');
+
+            const interval = setInterval(() => {
+                count--;
+                if (count > 0) { countdownNumber.textContent = count; playSound('tick'); } 
+                else if (count === 0) { countdownNumber.textContent = "START!"; playSound('start'); } 
+                else { clearInterval(interval); countdownScreen.classList.remove('active'); callback(); }
+            }, 1000);
+        }
+
+        startButtonWF2.addEventListener('click', function() {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            startButtonWF2.disabled = true; startButtonWF2.style.backgroundColor = '#30363d'; startButtonWF2.style.color = '#8b949e'; startButtonWF2.style.cursor = 'not-allowed';
+            generateTextWF2();
+
+            runCountdown(() => {
+                isGameOverWF2 = false; missCountWF2 = 0;
+                missElement.textContent = missCountWF2; timerElement.textContent = "0.000s";
+                targetArea.style.filter = 'blur(0px)'; targetArea.style.pointerEvents = 'auto';
+
+                startTimeWF2 = Date.now();
+                timerIntervalWF2 = setInterval(() => {
+                    if (!isGameOverWF2) { const elapsedTime = (Date.now() - startTimeWF2) / 1000; timerElement.textContent = elapsedTime.toFixed(3) + "s"; }
+                }, 10);
+                
+                document.querySelectorAll('.mode-btn').forEach(btn => { btn.style.pointerEvents = 'none'; btn.style.opacity = '0.5'; });
+            });
+        });
+
+        targetArea.addEventListener('click', function(event) {
+            if (isGameOverWF2) return;
+            if (event.target.id !== 'correct-answer') {
+                missCountWF2++; missElement.textContent = missCountWF2;
+                playSound('miss');
+                showModal('<span style="color: #ff7b72;">❌ MISS !!</span>', '違う文字だよ！よく探してね！', 12);
+            }
+        });
+
+        modalCloseBtn.addEventListener('click', function() {
+            customModal.classList.remove('active');
+            if (!isGameOverWF2) { targetArea.style.filter = 'blur(0px)'; } 
+            else {
+                startButtonWF2.disabled = false; startButtonWF2.style.backgroundColor = '#1f6feb'; startButtonWF2.style.color = 'white'; startButtonWF2.style.cursor = 'pointer';
+                startButtonWF2.textContent = `NEXT STAGE ${currentStageWF2}`;
+                document.querySelectorAll('.mode-btn').forEach(btn => { btn.style.pointerEvents = 'auto'; btn.style.opacity = '1'; });
+            }
+        });
     </script>
 </body>
 </html>
